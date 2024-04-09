@@ -1,0 +1,42 @@
+---
+- name: Create "{{ jaeger.namespace }}" namespace
+  kubernetes.core.k8s:
+    name: "{{ jaeger.namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Check ELASTIC Avalibility
+  include_tasks: check_elastic.yaml
+
+# # You can get error this step if you use digitalocean cluster. Install it on web browser manually and close the step below.  
+- name: Create Cert Manager 
+  include_tasks: create_cert_manager.yaml
+
+- name: Apply Jaeger Operator 
+  include_tasks: apply_jaeger_operator.yaml
+
+- name: Wait to jaeger operator installation exactly finish
+  pause:
+    seconds: 25
+
+- name: Create Jaeger collector and query
+  include_tasks: create_jaeger_companents.yaml
+
+- name: Create Temproray Hotrod App 
+  include_tasks: temp_hotrod_app.yaml
+
+- name: Wait to Hotrod App installation exactly finish
+  pause:
+    seconds: 25
+
+- name: Create Temproray Trace App
+  include_tasks: temp_trace_app.yaml
+
+- name: Wait to jaeger operator installation exactly finish
+  pause:
+    seconds: 25
+
+- name: Delete Test Pods 
+  include_tasks: delete_test_pod.yaml
+

@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-hotrod-app
+  labels:
+    app: hotrod
+spec:
+  containers:
+  - name: hotrod
+    image: jaegertracing/example-hotrod:latest
+    ports:
+    - containerPort: 8080
+    - containerPort: 8081
+    - containerPort: 8082
+    - containerPort: 8083
+    env:
+    - name: OTEL_EXPORTER_JAEGER_ENDPOINT
+      value: http://medium-demo-collector.observability::14268/api/traces
+     # value: http://"{{ jaeger.jaeger_comp.name }}"-collector."{{ jaeger.namespace }}":14268/api/traces
+    - name: OTEL_EXPORTER_OTLP_ENDPOINT
+      value: http://medium-demo-collector.observability:4318
+      # value: http://"{{ jaeger.jaeger_comp.name }}"-collector."{{ jaeger.namespace }}":4318
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-hotrod-service
+  labels:
+    app: hotrod
+spec:
+  selector:
+    app: hotrod
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

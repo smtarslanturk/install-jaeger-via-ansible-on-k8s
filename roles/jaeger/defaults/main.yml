@@ -1,0 +1,29 @@
+# All values for all roles
+k8s:
+  kubeconfig_path: "/Users/sametarslanturk/.kube/medium/medium-jaeger.yaml" #CHANGE HERE! 
+  cluster_context: "do-medium-jaeger" #CHANGE HERE with YOUR CLUSTER NAME! 
+
+temp_folder_path: "/tmp/ansible_temp" #CREATE THIS FOLDER LOCAL! 
+
+jaeger:
+  helm_cert_manager:
+    helm_repo_url: "https://charts.jetstack.io"
+    helm_repo_name: "jetstack" 
+    helm_chart_ref: "jetstack/cert-manager"
+    helm_release_name: "cert-manager"
+    helm_chart_version: "v1.13.3"
+    # helm_chart_version: "v1.14.4"
+    helm_release_namespace: "cert-manager"
+
+  namespace: "observability"
+  create_namespace: true
+
+  jaeger_operator:
+    operator_manifest_url: https://github.com/jaegertracing/jaeger-operator/releases/download/v1.53.0/jaeger-operator.yaml
+
+  jaeger_comp:
+    name: medium-demo
+    es_username: "elastic" #CHANGE HERE! 
+    es_password: Kx5JdOiosvtXRGqC  #CHANGE HERE! 
+    es_url: "https://elasticsearch-master.elastic:9200" #CHANGE HERE! 
+

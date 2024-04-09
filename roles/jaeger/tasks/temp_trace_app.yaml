@@ -1,0 +1,14 @@
+#########################
+#### Create Temprary Test Pod That Will Crate Trace
+#########################
+- name: Apply Trace Pod Manifest
+  kubernetes.core.k8s:
+    state: present
+    src: "{{ role_path }}/templates/trace.yaml"
+    namespace: "{{ jaeger.namespace }}"
+
+- name: Wait for Trace Pods Become Ready
+  shell: "kubectl wait --namespace={{ jaeger.namespace }} --for=condition=Ready pods --selector 'app=hotrod-trace' --timeout=600s"
+  register: trace_app_pods_ready
+
+- debug: var=trace_app_pods_ready.stdout_lines

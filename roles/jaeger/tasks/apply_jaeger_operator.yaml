@@ -1,0 +1,25 @@
+############################
+####### Apply jaeger operator
+############################
+- name: Download Jaeger Operator Manifest
+  ansible.builtin.get_url:
+    url: "{{ jaeger.jaeger_operator.operator_manifest_url }}"
+    dest: "{{ temp_folder_path }}/jaeger-operator.yaml"
+    mode: '0664'
+
+- name: Apply Jaeger Operator Manifest to Cluster
+  kubernetes.core.k8s:
+    state: present
+    src: "{{ temp_folder_path }}/jaeger-operator.yaml"
+    namespace: "{{ jaeger.namespace }}"
+
+- name: Wait for Jaeger Operator Pods Become Ready
+  shell: "kubectl wait --namespace={{ jaeger.namespace }} --for=condition=Ready pods --selector 'name=jaeger-operator' --timeout=600s"
+  register: jaeger_operator_pods_ready
+
+- debug: var=jaeger_operator_pods_ready.stdout_lines
+
+- name: Delete Downloaded Jaeger Operator Manifest
+  file:
+    path: "{{ temp_folder_path }}/jaeger-operator.yaml"
+    state: absent

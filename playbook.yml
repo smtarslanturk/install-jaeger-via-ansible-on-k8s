@@ -1,0 +1,6 @@
+- hosts: local
+  environment:
+    K8S_AUTH_CONTEXT: "{{ k8s.cluster_context }}"   
+  roles:
+    - roles/jaeger
+

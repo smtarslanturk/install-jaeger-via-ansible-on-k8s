@@ -1,0 +1,24 @@
+############################
+####### Create Cert Manager
+############################
+- name: "Add Helm repo: {{ jaeger.helm_cert_manager.helm_chart_ref }} at: {{ jaeger.helm_cert_manager.helm_repo_url }}"
+  kubernetes.core.helm_repository:
+    name: "{{ jaeger.helm_cert_manager.helm_repo_name }}"
+    repo_url: "{{ jaeger.helm_cert_manager.helm_repo_url }}"
+
+- name: "Install {{ jaeger.helm_cert_manager.helm_release_name }}"
+  kubernetes.core.helm:
+    name: "{{ jaeger.helm_cert_manager.helm_release_name }}"
+    update_repo_cache: true
+    create_namespace: "{{ jaeger.create_namespace }}"
+    release_namespace: "{{ jaeger.helm_cert_manager.helm_release_namespace }}"
+    chart_ref: "{{ jaeger.helm_cert_manager.helm_chart_ref }}"
+    chart_version: "{{ jaeger.helm_cert_manager.helm_chart_version }}"
+    # values_files: "{{ temp_folder_path }}/jaeger-values.yml"
+    # disable_hook: true
+
+- name: Wait for Cert Manager Pods Become Ready
+  shell: "kubectl wait --namespace={{ jaeger.helm_cert_manager.helm_release_namespace }} --for=condition=Ready pods --selector 'app.kubernetes.io/instance={{ jaeger.helm_cert_manager.helm_release_name }}' --timeout=600s"
+  register: certmanager_pods_ready
+
+- debug: var=certmanager_pods_ready.stdout_lines

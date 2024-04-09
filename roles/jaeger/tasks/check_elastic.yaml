@@ -1,0 +1,59 @@
+############################
+####### Elastic Check
+############################
+- name: Create Temporary Pod to Write Elastic Status Path
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ jaeger.namespace }}"
+    definition:
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: temp-pod-for-elastic-status-check
+        labels:
+          app: test
+      spec:
+        containers:
+        - name: temp-pod-for-elastic-status-check
+          image: alpine
+          command: ['sh', '-c']
+          args:
+            - >
+              for i in {1..5}; do  # 5 kez kontrol et
+                apk update && apk add curl jq &&
+                response=$(curl -s -k -u "{{ jaeger.jaeger_comp.es_username }}:{{ jaeger.jaeger_comp.es_password }}" "{{ jaeger.jaeger_comp.es_url }}/_cluster/health" 2>/dev/null | jq -r '.status') &&
+                echo -n "$response" | tr -d '\n' > /tmp/status &&
+                sleep 120;
+              done
+
+- name: Wait For Temproray Elastic Controller Pods Become Ready
+  shell: "kubectl wait --namespace={{ jaeger.namespace }} --for=condition=Ready pods --selector 'app=test' --timeout=60s"
+  register: jaeger_pods_ready
+
+- name: Wait to get elastic status to write path
+  pause:
+    seconds: 10
+
+- name: Get Elastic Status
+  kubernetes.core.k8s_exec:
+    namespace: "{{ jaeger.namespace }}"
+    pod: temp-pod-for-elastic-status-check
+    container: temp-pod-for-elastic-status-check
+    command: sh -c "cat /tmp/status"
+  register: elastic_status_output
+
+- name: Print Elasticsearch Status
+  debug:
+      msg: "{{ elastic_status_output.stdout }}"
+
+- name: Delete Temproray Elastic Controller Pod
+  kubernetes.core.k8s:
+    state: absent
+    namespace: "{{ jaeger.namespace }}"
+    kind: Pod
+    name: temp-pod-for-elastic-status-check
+
+- name: Check and Notify About Elasticsearch Status
+  when: elastic_status_output.stdout == "red"
+  fail:
+    msg: "Elasticsearch UNREACHABLE! Current status: {{ elastic_status_output.stdout }}"

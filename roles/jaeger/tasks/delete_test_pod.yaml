@@ -1,0 +1,21 @@
+#########################
+#### Create Temprary Test Hotrod App
+#########################
+- name: Delete Test Trace Pod 
+  shell: "kubectl delete --namespace={{ jaeger.namespace }} pods --selector 'app=hotrod-trace'"
+  register: delete_trace_app_pod
+
+- debug: var=delete_trace_app_pod.stdout_lines
+
+- name: Delete Test Hotrod App Pod 
+  shell: "kubectl delete --namespace={{ jaeger.namespace }} pods --selector 'app=hotrod'"
+  register: delete_hotrod_app_pod
+
+- debug: var=delete_hotrod_app_pod.stdout_lines
+
+- name: Delete Test Hotrod App Service 
+  shell: "kubectl delete --namespace={{ jaeger.namespace }} service --selector 'app=hotrod'"
+  register: delete_hotrod_app_service
+
+- debug: var=delete_hotrod_app_service.stdout_lines
+

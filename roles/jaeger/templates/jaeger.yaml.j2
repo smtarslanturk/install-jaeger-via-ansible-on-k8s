@@ -1,0 +1,51 @@
+apiVersion: jaegertracing.io/v1
+kind: Jaeger
+metadata:
+  name: "{{ jaeger.jaeger_comp.name }}"
+  namespace: "{{ jaeger.namespace }}"
+spec:
+  collector:
+    image: jaegertracing/jaeger-collector:1.52.0
+    serviceType: ClusterIP
+    maxReplicas: 3
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1024Mi
+  query:
+    image: jaegertracing/jaeger-query:1.52.0
+  storage:
+    options:
+      es:
+        tls.skip-host-verify: "true"
+        version: 8
+        log-level: debug
+        create-index-templates: true
+        index-prefix: dgfin-trace
+        server-urls: "{{ jaeger.jaeger_comp.es_url }}"
+        num-shards: 3
+        #num-replicas: 0
+        username: "{{ jaeger.jaeger_comp.es_username }}"
+        password: "{{ jaeger.jaeger_comp.es_password }}"
+    #     tls:
+    #       ca: /es/certificates/ca.crt
+    #       cert: /es/certificates/tls.crt
+    #       enabled: true
+    #       key: /es/certificates/tls.key
+    # secretName: elasticsearch-master-certs
+    # secretName: jaeger-secret
+    type: elasticsearch
+  strategy: production
+  ui:
+    options:
+      dependencies:
+        menuEnabled: false
+  #volumeMounts:
+   # - mountPath: /es/certificates/
+    #  name: certificates
+     # readOnly: true
+  #volumes:
+   # - name: certificates
+    #  secret:
+      #  # secretName: elastic-certificates
+     #   secretName: elasticsearch-master-certs
